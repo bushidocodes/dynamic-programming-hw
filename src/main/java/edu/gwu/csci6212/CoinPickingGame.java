@@ -1,25 +1,24 @@
 package edu.gwu.csci6212;
 
-import java.util.*;
-
 public class CoinPickingGame {
-    public ArrayList<Integer> coins;
-    public ArrayList<Integer> playerOne;
-    public ArrayList<Integer> playerTwo;
+    private MemoizationTableCell[][] memoizationTable;
+    private int[] coins;
 
-    CoinPickingGame() {
-        this.coins = new ArrayList<Integer>();
-        this.playerOne = new ArrayList<Integer>();
-        this.playerTwo = new ArrayList<Integer>();
+    private class MemoizationTableCell {
+        public int playerOneScore;
+        public int playerTwoScore;
+
+        MemoizationTableCell(int playerOneScore, int playerTwoScore) {
+            this.playerOneScore = playerOneScore;
+            this.playerTwoScore = playerTwoScore;
+        }
     }
 
     public void setup(int coins[]) {
         if (hasOddCount(coins) || isEmpty(coins))
             throw new IllegalCapacity();
-        reset();
-        for (int coin : coins) {
-            this.coins.add(coin);
-        }
+        this.coins = coins;
+        this.memoizationTable = new MemoizationTableCell[coins.length][coins.length];
     }
 
     private boolean hasOddCount(int[] coins) {
@@ -30,73 +29,58 @@ public class CoinPickingGame {
         return coins.length == 0;
     }
 
-    private void reset() {
-        this.coins.clear();
-        this.playerOne.clear();
-        this.playerTwo.clear();
+    private void calculateMemoizationTable() {
+        calculateMainDiagonal();
+        calculateCells();
+    }
+
+    private void calculateMainDiagonal() {
+        for (int coinIndex = 0; coinIndex < this.coins.length; coinIndex++) {
+            this.memoizationTable[coinIndex][coinIndex] = new MemoizationTableCell(coins[coinIndex], 0);
+        }
+    }
+
+    private void calculateCells() {
+        for (int startBounds = 1; startBounds < this.coins.length; startBounds++) {
+            for (int x = startBounds; x < this.coins.length; x++) {
+                int y = x - startBounds;
+                calculateCell(x, y);
+            }
+        }
+    }
+
+    private void calculateCell(int x, int y) {
+        this.memoizationTable[x][y] = calculatePlayerOneScoreFromOneCellDown(x,
+                y) >= calculatePlayerOneScoreFromOneCellLeft(x, y)
+                        ? new MemoizationTableCell(calculatePlayerOneScoreFromOneCellDown(x, y),
+                                calculatePlayerTwoScoreFromOneCellDown(x, y))
+                        : new MemoizationTableCell(calculatePlayerOneScoreFromOneCellLeft(x, y),
+                                calculatePlayerTwoScoreFromOneCellLeft(x, y));
+    }
+
+    private int calculatePlayerOneScoreFromOneCellDown(int x, int y) {
+        return this.memoizationTable[x][y + 1].playerTwoScore + coins[y];
+    }
+
+    private int calculatePlayerTwoScoreFromOneCellDown(int x, int y) {
+        return this.memoizationTable[x][y + 1].playerOneScore;
+    }
+
+    private int calculatePlayerOneScoreFromOneCellLeft(int x, int y) {
+        return this.memoizationTable[x - 1][y].playerTwoScore + coins[x];
+    }
+
+    private int calculatePlayerTwoScoreFromOneCellLeft(int x, int y) {
+        return this.memoizationTable[x - 1][y].playerOneScore;
     }
 
     public int play() {
-        while (this.coins.size() > 0) {
-            playerOne.add(pickWisestCoin());
-            playerTwo.add(pickWisestCoin());
-        }
-        return calculateTotalValue(this.playerOne);
+        this.calculateMemoizationTable();
+        return this.calculateTotalValue();
     }
 
-    private Integer pickWisestCoin() {
-        if (isLastRound()) {
-            return pickLargestCoin(this.coins);
-        } else if (determineScoreIfIPickLargest() >= determineScoreIfIPickSmallest()) {
-            return pickLargestCoin(this.coins);
-        } else {
-            return pickSmallestCoin(this.coins);
-        }
-    }
-
-    private boolean isLastRound() {
-        return this.coins.size() <= 2;
-    }
-
-    private int determineScoreIfIPickSmallest() {
-        int pickSmallestTotal = 0;
-        ArrayList<Integer> pickSmallestHypothetical = new ArrayList<Integer>();
-        pickSmallestHypothetical.addAll(this.coins);
-        pickSmallestTotal += pickSmallestCoin(pickSmallestHypothetical);
-        pickLargestCoin(pickSmallestHypothetical);
-        pickSmallestTotal += pickLargestCoin(pickSmallestHypothetical);
-        return pickSmallestTotal;
-    }
-
-    private int determineScoreIfIPickLargest() {
-        int pickLargestTotal = 0;
-        ArrayList<Integer> pickLargestHypothetical = new ArrayList<Integer>();
-        pickLargestHypothetical.addAll(this.coins);
-        pickLargestTotal += pickLargestCoin(pickLargestHypothetical);
-        pickLargestCoin(pickLargestHypothetical);
-        pickLargestTotal += pickLargestCoin(pickLargestHypothetical);
-        return pickLargestTotal;
-    }
-
-    private Integer pickLargestCoin(ArrayList<Integer> hypothetical) {
-        if (hypothetical.get(0) >= hypothetical.get(hypothetical.size() - 1)) {
-            return hypothetical.remove(0);
-        } else {
-            return hypothetical.remove(hypothetical.size() - 1);
-        }
-    }
-
-    private Integer pickSmallestCoin(ArrayList<Integer> hypothetical) {
-        if (hypothetical.get(0) <= hypothetical.get(hypothetical.size() - 1)) {
-            return hypothetical.remove(0);
-        } else {
-            return hypothetical.remove(hypothetical.size() - 1);
-        }
-    }
-
-    private int calculateTotalValue(ArrayList<Integer> coins) {
-        Optional<Integer> sum = coins.stream().reduce((valOne, valTwo) -> valOne + valTwo);
-        return sum.isPresent() ? sum.get() : 0;
+    private int calculateTotalValue() {
+        return this.memoizationTable[this.coins.length - 1][0].playerOneScore;
     }
 
     public static class IllegalCapacity extends RuntimeException {
