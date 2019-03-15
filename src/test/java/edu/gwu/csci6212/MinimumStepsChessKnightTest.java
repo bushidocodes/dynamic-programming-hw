@@ -1,56 +1,66 @@
 package edu.gwu.csci6212;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 
 public class MinimumStepsChessKnightTest {
+    static MinimumStepsChessKnight myGame;
 
-
-    public static void  outOfBoad(){
+    @Test
+    public void  doesNotAcceptCoordinatesOutOfBounds(){
         int size = 7;
         int[] start = new int[]{7, 5};
         int[] goal = new int[]{1, 1};
-        executeGame(size, start, goal);
+        myGame = new MinimumStepsChessKnight();
+        assertEquals(-1, myGame.startGame(size, start, goal));
     }
 
-    public static void  startEqualsGoal(){
+    @Test
+    public void  startPositionEqualsGoalPosition(){
         int size = 7;
         int[] start = new int[]{1, 1};
         int[] goal = new int[]{1, 1};
-        executeGame(size, start, goal);
+        myGame = new MinimumStepsChessKnight();
+        assertEquals(0, myGame.startGame(size, start, goal));
+
 
     }
 
-    public static void  twoSteps(){
+    @Test
+    public void  startIsTwoStepsFromGoal(){
         int size = 7;
         int[] start = new int[]{3, 1};
         int[] goal = new int[]{1, 1};
-        executeGame(size, start, goal);
+        myGame = new MinimumStepsChessKnight();
+        assertEquals(2, myGame.startGame(size, start, goal));
+
 
     }
 
 
-    public static void  threeSteps(){
+    @Test
+    public void  startIsThreeStepsFromGoal(){
         int size = 7;
         int[] start = new int[]{4, 5};
         int[] goal = new int[]{1, 1};
-        executeGame(size, start, goal);
+        myGame = new MinimumStepsChessKnight();
+        assertEquals(3, myGame.startGame(size, start, goal));
+
 
     }
 
 
-    public static void  fourSteps(){
+    @Test
+    public void  startIsFourStepsFromGoal(){
         int size = 7;
         int[] start = new int[]{1, 1};
         int[] goal = new int[]{6, 6};
-        executeGame(size, start, goal);
+        myGame = new MinimumStepsChessKnight();
+        assertEquals(4, myGame.startGame(size, start, goal));
+
 
     }
 
-    public static void executeGame(int size, int[] start, int[] goal){
-        MinimumStepsChessKnight myGame = new MinimumStepsChessKnight();
-        try{
-            myGame.setUpBoard(size, start, goal);
-        }catch (Exception e){
-            System.out.println(e);
-        }
-    }
+
 }
-

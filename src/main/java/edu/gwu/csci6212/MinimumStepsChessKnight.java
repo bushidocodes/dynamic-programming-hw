@@ -1,64 +1,88 @@
 package edu.gwu.csci6212;
 
-
 import java.util.LinkedList;
+
+
 
 public class MinimumStepsChessKnight {
 
-    private int [][] board;
-    private int[] start;
-    private int[] goal;
-    private LinkedList<int[]> queue;
+    private boolean [][] board;
+    private Position start;
+    private Position goal;
+    private LinkedList<Position> queue;
     private boolean gameOver;
-    private int[][] knightMovements;
+    private Position[] knightMovements;
     private int size;
     private int totalSteps;
 
-    public MinimumStepsChessKnight(){
-        this.start = new int[3];
-        this.goal = new int[3];
+    MinimumStepsChessKnight(){
         this.queue = new LinkedList<>();
         this.gameOver = false;
 
-        this.knightMovements = new int [][] {
-                //x y step
-                {1, 2, 1},
-                {1, -2, 1},
-                {2, 1, 1},
-                {2, -1, 1},
-                {-2, 1, 1},
-                {-2, -1, 1},
-                {-1, 2, 1},
-                {-1, -2, 1}
+        this.knightMovements = new Position [] {
+                new Position(1,2,1),
+                new Position(1,-2,1),
+                new Position(2,1,1),
+                new Position(2,-1,1),
+                new Position(-2,1,1),
+                new Position(-2,-1,1),
+                new Position(-1,2,1),
+                new Position(-1,-2,1),
         };
-
     }
 
-    public void setUpBoard(int size, int[] start, int[] goal) throws Exception{
+    public class Position {
+        public int x;
+        public int y;
+        public int steps;
+
+        Position(){
+            this.x = 0;
+            this.y = 0;
+            this.steps = 0;
+        }
+        Position(int x, int y, int steps){
+            this.x = x;
+            this.y = y;
+            this.steps = steps;
+        }
+
+        public void add(Position p1){
+            this.x += p1.x;
+            this.y += p1.y;
+            this.steps  += p1.steps;
+        }
+        public boolean equals(Position p2){
+            if (this.x == p2.x && this.y == p2.y)   return true;
+            else    return false;
+        }
+    }
+
+    public int startGame(int size, int[] start_array, int[] goal_array){
         this.size = size;
-        board = new int[size][size];
-        this.start[0] = start[0];
-        this.start[1] = start[1];
-        this.start[2] = 0;
-        this.goal = goal;
-        if (outOfBoard()) throw new Exception("Position out of board");
-        board [start[0]][start[1]] = 1;
-        if (!isKnightInGoal()){
-            startGame();
+        board = new boolean[size][size];
+        start = new Position(start_array[0], start_array[1], 0);
+        goal = new Position(goal_array[0], goal_array[1], 0);
+
+        if (outOfBounds()) return -1;
+
+        if (start.equals(goal)){
+            return 0;
+        }
+        else{
+            board [start.x][start.y] = true;
+            queue.add(start);
+            while(!gameOver){
+                calculateSquares(queue.remove());
+            }
+            return totalSteps;
         }
     }
 
-    public void startGame(){
-        queue.add(start);
-        while(!gameOver){
-            calculateSquares(queue.remove());
-        }
-        System.out.println("The knight can find the goal in " + totalSteps + " steps.");
-    }
 
-    public void calculateSquares(int[] origin){
-        for (int [] knightMove : knightMovements){
-            int [] temp = new int[3];
+    public void calculateSquares(Position origin){
+        for (Position knightMove : knightMovements){
+            Position temp = new Position();
             calculateMovement(temp, origin, knightMove);
             if(isInsideLimits(temp)){
                 if(!isUsed(temp)){
@@ -69,45 +93,35 @@ public class MinimumStepsChessKnight {
         }
     }
 
-    private boolean outOfBoard(){
-        if(start[0] > size - 1 || start[0] < 0 || start[1] > size -1 || start[1] < 0) return true;
-        return goal[0] > size - 1 || goal[0] < 0 || goal[1] > size - 1 || goal[1] < 0;
-
-    }
-
-    private boolean isKnightInGoal(){
-        if (start[0] == goal[0] && start[1] == goal[1]){
-            System.out.println("You are already in your goal position!");
-            return  true;
-        }
+    private boolean outOfBounds(){
+        if(!isInsideLimits(start)) return true;
+        if(!isInsideLimits(goal)) return true;
         return false;
     }
 
-    private boolean isInsideLimits(int[] temp){
-        return temp[0] < size && temp[1] < size && temp[0] > 0 && temp[1] > 0;
+    private boolean isInsideLimits(Position temp){
+        return temp.x < size && temp.y < size && temp.x > 0 && temp.y > 0;
     }
 
-    private boolean isUsed(int[] temp){
-        return (board[temp[0]][temp[1]] == 1);
+    private boolean isUsed(Position temp){
+        return (board[temp.x][temp.y] == true);
     }
 
-    private void makeMovement(int[] temp){
+    private void makeMovement(Position temp){
         queue.add(temp);
-        board[temp[0]][temp[1]] =1;
+        board[temp.x][temp.y] = true;
     }
 
-    private void calculateMovement(int[] temp, int[] origin, int[] knightMove){
-        for(int i =0; i < 3; i++){
-            temp[i] = origin[i] + knightMove[i];
-        }
+    private void calculateMovement(Position temp, Position origin, Position knightMove){
+        temp.add(origin);
+        temp.add(knightMove);
     }
 
-    private void isGameOver(int[] temp){
-        if(temp[0] == goal[0] && temp[1] == goal[1]){
+    private void isGameOver(Position temp){
+        if(temp.equals(goal)){
             gameOver = true;
-            totalSteps = temp[2];
+            totalSteps = temp.steps;
         }
     }
 }
-
 
