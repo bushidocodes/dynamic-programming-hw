@@ -53,8 +53,7 @@ public class MinimumStepsChessKnight {
             this.steps  += p1.steps;
         }
         public boolean equals(Position p2){
-            if (this.x == p2.x && this.y == p2.y)   return true;
-            else    return false;
+            return (this.x == p2.x && this.y == p2.y);
         }
     }
 
@@ -94,9 +93,7 @@ public class MinimumStepsChessKnight {
     }
 
     private boolean outOfBounds(){
-        if(!isInsideLimits(start)) return true;
-        if(!isInsideLimits(goal)) return true;
-        return false;
+        return !isInsideLimits(start) || !isInsideLimits(goal);
     }
 
     private boolean isInsideLimits(Position temp){
